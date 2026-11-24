@@ -1,160 +1,98 @@
 #!/usr/bin/env python3
-"""Trace the Lulu (水豚噜噜) idle reference frame into flat vector polygons.
+"""Trace the Lulu idle frame into runtime vector polygons.
 
-Source artwork: https://github.com/czy666chen/lulu (MIT, (c) 2026 czy666chen).
-The generated header contains polygon point lists only; no bitmap is shipped or
-loaded at runtime. Regenerate with:
-
-    python scripts/trace-lulu-shapes.py path/to/spritesheet.webp
-
-(Only needed when the reference art or the trace settings change.)
+Source: https://github.com/czy666chen/lulu (MIT).
+This runs during development only and generates windows/src/LuluShapes.hpp.
 """
 import sys
 from pathlib import Path
-
 import cv2
 import numpy as np
 
-CELL_W, CELL_H = 192, 208
-SCALE = 4  # trace at 4x for smoother curves, then divide the points back
-# Idle frame 0 of the 8x11 sprite sheet.
-FRAME_ROW, FRAME_COL = 0, 0
-
-HEAD_ORIGIN = (95.0, 80.0)     # cell-space head anchor
-BODY_ORIGIN = (95.0, 157.0)    # cell-space body anchor
-
+W, H, SCALE = 192, 208, 4
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "windows" / "src" / "LuluShapes.hpp"
 
 
-def simplify(contour, eps=0.9):
-    approx = cv2.approxPolyDP(contour, eps, True)
-    return [(float(p[0][0]), float(p[0][1])) for p in approx]
+def contour_points(mask, x0, y0, x1, y1, eps=1.8, min_area=30, all_components=False):
+    region = mask[y0*SCALE:y1*SCALE, x0*SCALE:x1*SCALE]
+    # Close small anti-alias gaps, then smooth the mask before contour extraction.
+    # This avoids the jagged stair-step polygons that made the previous render look faceted.
+    region = cv2.morphologyEx(region, cv2.MORPH_CLOSE, np.ones((13, 13), np.uint8))
+    region = cv2.GaussianBlur(region, (9, 9), 2.0)
+    _, region = cv2.threshold(region, 110, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours = [c for c in contours if cv2.contourArea(c) >= min_area*SCALE*SCALE]
+    contours.sort(key=cv2.contourArea, reverse=True)
+    if not all_components:
+        contours = contours[:1]
+    out = []
+    for c in contours:
+        p = cv2.approxPolyDP(c, eps*SCALE, True)
+        pts = [(round(float(v[0][0])/SCALE+x0, 2), round(float(v[0][1])/SCALE+y0, 2)) for v in p]
+        out.append(pts)
+    return out
 
 
-def smooth(pts, passes=3, window=1):
-    """Circular moving average: removes pixel-scale fringe without losing the silhouette."""
-    for _ in range(passes):
-        n = len(pts)
-        if n < 5:
-            return pts
-        out = []
-        for i in range(n):
-            xs = [pts[(i + k) % n][0] for k in range(-window, window + 1)]
-            ys = [pts[(i + k) % n][1] for k in range(-window, window + 1)]
-            out.append((sum(xs) / len(xs), sum(ys) / len(ys)))
-        pts = out
-    return pts
-
-
-def largest(contours, min_area=80):
-    contours = [c for c in contours if cv2.contourArea(c) >= min_area]
-    if not contours:
-        return None
-    return max(contours, key=cv2.contourArea)
+def cpp(name, components):
+    text = f"inline const std::vector<LuluPolygon>& {name}() {{\n    static const std::vector<LuluPolygon> p = {{\n"
+    for pts in components:
+        text += "        { { " + ", ".join("{%.2ff, %.2ff}" % p for p in pts) + " } },\n"
+    return text + "    };\n    return p;\n}\n"
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 2:
         raise SystemExit("usage: trace-lulu-shapes.py <spritesheet.webp>")
-    img = cv2.imread(sys.argv[1], cv2.IMREAD_UNCHANGED)
-    if img is None:
-        raise SystemExit("cannot read sprite sheet")
-    cell = img[FRAME_ROW * CELL_H:(FRAME_ROW + 1) * CELL_H,
-               FRAME_COL * CELL_W:(FRAME_COL + 1) * CELL_W]
-    cell = cv2.resize(cell, (CELL_W * SCALE, CELL_H * SCALE), interpolation=cv2.INTER_CUBIC)
+    sheet = cv2.imread(sys.argv[1], cv2.IMREAD_UNCHANGED)
+    if sheet is None:
+        raise SystemExit("cannot read spritesheet")
+    cell = cv2.resize(sheet[:H, :W], (W*SCALE, H*SCALE), interpolation=cv2.INTER_CUBIC)
     b, g, r, a = cv2.split(cell)
-    rgb = cv2.merge([r, g, b])
-    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+    hsv = cv2.cvtColor(cv2.merge([r, g, b]), cv2.COLOR_RGB2HSV)
     solid = (a > 200).astype(np.uint8) * 255
-    solid = cv2.morphologyEx(solid, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
 
-    yellow = cv2.bitwise_and(cv2.inRange(hsv, (20, 90, 150), (40, 255, 255)), solid)
-    orange = cv2.bitwise_and(cv2.inRange(hsv, (5, 150, 150), (20, 255, 255)), solid)
-    green = cv2.bitwise_and(cv2.inRange(hsv, (35, 80, 60), (90, 255, 255)), solid)
+    def col(lo, hi, s=70, v=80):
+        return cv2.bitwise_and(cv2.inRange(hsv, (lo, s, v), (hi, 255, 255)), solid)
 
-    yarn = cv2.bitwise_or(yellow, cv2.bitwise_or(orange, green))
-    yarn = cv2.morphologyEx(yarn, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
-    yy = np.arange(CELL_H * SCALE)[:, None] * np.ones((1, CELL_W * SCALE), np.int32)
-    def rows(lo, hi):
-        return ((yy >= lo * SCALE) & (yy < hi * SCALE)).astype(np.uint8) * 255
+    yellow = col(20, 40, 70, 130)
+    orange = col(5, 21, 100, 100)
+    blue = col(90, 135, 55, 35)
+    dark = cv2.bitwise_and(cv2.inRange(hsv, (0, 0, 0), (179, 255, 105)), solid)
+    white = cv2.bitwise_and(cv2.inRange(hsv, (0, 0, 180), (179, 60, 255)), solid)
+    green = col(35, 95, 55, 35)
 
-    def region(mask, lo, hi):
-        return cv2.bitwise_and(mask, rows(lo, hi))
+    # Preserve the source's yellow face/ear silhouette as a separate layer;
+    # orange muzzle is traced independently on top, just like the reference art.
+    layers = {
+        "headYellow": contour_points(yellow, 18, 23, 174, 112, 2.0, 100),
+        "muzzle": contour_points(orange, 18, 43, 174, 137, 2.4, 100),
+        "hat": contour_points(orange, 58, 0, 138, 38, 0.65, 30),
+        "bodyYellow": contour_points(yellow, 42, 118, 150, 177, 2.8, 100),
+        "shorts": contour_points(orange, 30, 145, 162, 208, 3.0, 100),
+        "legs": contour_points(yellow, 35, 170, 160, 208, 2.0, 15, True),
+        "idleArms": contour_points(yellow, 18, 95, 174, 184, 2.5, 20, True),
+        "eyesBlue": contour_points(blue, 50, 34, 142, 70, 1.2, 4, True),
+        "eyesDark": contour_points(dark, 50, 34, 142, 70, 1.2, 4, True),
+        "mouthDark": contour_points(dark, 60, 82, 132, 116, 1.2, 3, True),
+        "mouthWhite": contour_points(white, 60, 82, 132, 116, 1.2, 3, True),
+        "highlights": contour_points(white, 50, 34, 142, 70, 1.0, 2, True),
+        "leaf": contour_points(green, 80, 0, 112, 20, 1.0, 2, True),
+    }
 
-    def poly(mask, lo, hi, eps=2.2, min_area=80):
-        m = region(mask, lo, hi)
-        m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
-        cnts, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        c = largest(cnts, min_area * SCALE * SCALE)
-        if c is None:
-            return []
-        pts = smooth(simplify(c, eps), passes=3, window=1)
-        arr = np.array(pts, dtype=np.float32).reshape(-1, 1, 2)
-        pts = simplify(arr.astype(np.int32), eps * 0.5)
-        return [(x / SCALE, y / SCALE) for x, y in pts]
-
-    # Head silhouette (crown cut just below the hat brim), muzzle, hat.
-    # Trace the full outer silhouette, including the orange muzzle edge, from
-    # alpha. The muzzle is drawn again as its own layer; this underlay prevents
-    # small gaps when head and muzzle are rotated independently.
-    head = poly(solid, 36, 130, eps=2.2)
-    muzzle = poly(orange, 45, 133, eps=2.0)
-    hat = poly(orange, 0, 33, eps=2.0, min_area=200)
-    # The tiny leaf is easier and cleaner to draw procedurally in the renderer.
-    leaf = []
-
-    # Torso: erase the side arms so procedural arms can animate on the keyboard.
-    torso_mask = region(yellow, 120, 178)
-    arm_free = torso_mask.copy()
-    arm_free[:, :54 * SCALE] = 0
-    arm_free[:, 138 * SCALE:] = 0
-    torso = poly(arm_free, 120, 178, eps=2.2, min_area=300)
-    shorts = poly(orange, 150, 208, eps=2.2, min_area=300)
-    leg_l = poly(yellow, 178, 208, eps=0.7, min_area=40)
-    # Split the leg contour by x if both legs merged into one blob.
-    legs = region(yellow, 178, 208)
-    cnts, _ = cv2.findContours(legs, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = sorted([c for c in cnts if cv2.contourArea(c) > 40 * SCALE * SCALE],
-                  key=lambda c: cv2.boundingRect(c)[0])
-    def scaled(c):
-        return [(x / SCALE, y / SCALE) for x, y in simplify(c, 2.2)]
-    leg_l = scaled(cnts[0]) if len(cnts) >= 1 else []
-    leg_r = scaled(cnts[1]) if len(cnts) >= 2 else []
-
-    def cpp(points, origin):
-        pts = ", ".join("{%.2ff, %.2ff}" % (x - origin[0], y - origin[1]) for x, y in points)
-        return "    { " + pts + " }"
-
-    def block(name, points, origin):
-        return f"inline const std::vector<LuluPoint>& {name}() {{\n    static const std::vector<LuluPoint> p = " + cpp(points, origin) + ";\n    return p;\n}\n"
-
-    header = """// Generated by scripts/trace-lulu-shapes.py — do not edit by hand.
-// Flat vector outlines traced from the MIT-licensed Lulu reference art
-// (https://github.com/czy666chen/lulu, (c) 2026 czy666chen). No bitmaps are shipped.
+    header = """// Generated by scripts/trace-lulu-shapes.py; do not edit by hand.
+// Polygon layers traced from the MIT-licensed Lulu reference frame.
 #pragma once
 #include <vector>
-
 struct LuluPoint { float x, y; };
-
+struct LuluPolygon { std::vector<LuluPoint> points; };
 """
-    for name, pts, org in [
-        ("luluHeadShape", head, HEAD_ORIGIN),
-        ("luluMuzzleShape", muzzle, HEAD_ORIGIN),
-        ("luluHatShape", hat, HEAD_ORIGIN),
-        ("luluLeafShape", leaf, HEAD_ORIGIN),
-        ("luluTorsoShape", torso, BODY_ORIGIN),
-        ("luluShortsShape", shorts, BODY_ORIGIN),
-        ("luluLegLeftShape", leg_l, BODY_ORIGIN),
-        ("luluLegRightShape", leg_r, BODY_ORIGIN),
-    ]:
-        header += block(name, pts, org) + "\n"
-
+    for name, components in layers.items():
+        header += cpp("lulu" + name[0].upper() + name[1:] + "Polygons", components) + "\n"
     OUT.write_text(header, encoding="utf-8")
     print("wrote", OUT)
-    for name, pts in [("head", head), ("muzzle", muzzle), ("hat", hat), ("torso", torso),
-                      ("shorts", shorts), ("legL", leg_l), ("legR", leg_r), ("leaf", leaf)]:
-        print(f"  {name}: {len(pts)} points")
+    for k, v in layers.items():
+        print(k, len(v), [len(x) for x in v])
 
 
 if __name__ == "__main__":
