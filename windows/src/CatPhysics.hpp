@@ -20,6 +20,11 @@ enum class CatCoatTheme : int {
     BritishBlue = 7
 };
 
+enum class PetSpecies : int {
+    Cat = 0,
+    Capybara = 1
+};
+
 enum class KeyboardTheme : int {
     ClassicMilk = 0,
     MidnightHacker = 1,
@@ -46,6 +51,7 @@ struct CatSettings {
     bool runAsAdmin = false; // relaunch elevated so keys typed into admin-level games are visible (UIPI)
     float scale = 1.0f;
     CatCoatTheme coatTheme = CatCoatTheme::ClassicBlack;
+    PetSpecies species = PetSpecies::Cat;
     KeyboardTheme keyboardTheme = KeyboardTheme::ClassicMilk;
     EyeColorTheme eyeTheme = EyeColorTheme::NeonChartreuse;
     int posX = -99999;
@@ -69,6 +75,7 @@ struct CatSettings {
         runAsAdmin       = readDword(L"RunAsAdmin", 0) != 0;
         scale            = std::clamp((float)readDword(L"ScalePct", 100) / 100.0f, 0.5f, 2.0f);
         coatTheme        = (CatCoatTheme)std::clamp((int)readDword(L"CoatTheme", 0), 0, 7);
+        species          = (PetSpecies)std::clamp((int)readDword(L"Species", 0), 0, 1);
         keyboardTheme    = (KeyboardTheme)std::clamp((int)readDword(L"KeyboardTheme", 0), 0, 2);
         eyeTheme         = (EyeColorTheme)std::clamp((int)readDword(L"EyeTheme", 0), 0, 5);
         DWORD hasPos     = readDword(L"HasPos", 0);
@@ -95,6 +102,7 @@ struct CatSettings {
         writeDword(L"RunAsAdmin", runAsAdmin ? 1 : 0);
         writeDword(L"ScalePct", (DWORD)(scale * 100.0f + 0.5f));
         writeDword(L"CoatTheme", (DWORD)coatTheme);
+        writeDword(L"Species", (DWORD)species);
         writeDword(L"KeyboardTheme", (DWORD)keyboardTheme);
         writeDword(L"EyeTheme", (DWORD)eyeTheme);
         if (posX != -99999 && posY != -99999) {

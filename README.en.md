@@ -31,6 +31,7 @@
   - **3-Key "Hind Paw Press"**: Hold 3 or more keys simultaneously and the cat lifts its hind paw to press the 3rd key!
   - **Head / Back Petting**: Gently stroke the cat's head with your cursor to trigger cozy closed eyes `— —` and shimmer particles; leave it idle and it falls asleep with floating `z`s.
   - **Smart Click-Through, Launch at Login & Auto Update Check**: Transparent areas pass clicks through automatically. Toggle **Full Click-Through (Gaming Anti-Misclick)** anytime, enable **Launch at Login** (Windows Registry / macOS LaunchAgent / Linux XDG Autostart), and get automatic update notifications in the menu bar / tray.
+- **🐹 Two Pet Species**: Cats (8 skins) and the **Lulu capybara** (mandarin hat + orange shorts, fully vector-drawn, keeping keyboard interaction and the 3-key easter egg)
 - **🎨 8 Skins & Custom Color Combinations**
   - **Cat Skins**: Classic Black Cat (neon yellow-green eyes) / Siamese Cat (warm oat cream + 2.5D caramel mask + chocolate socks + sapphire blue eyes) / American Shorthair (silver tabby & white) / Orange & White Cat (orange crown + white chest & mittens) / **Tuxedo Cat (ink black + white bib & mittens) / Calico Cat (creamy white + orange & charcoal patches + mismatched ears) / Ginger Tabby (warm ginger + deep-brown tabby stripes) / British Shorthair Blue (smoky blue-gray coat + copper eyes)**
   - **Keyboard Themes**: Classic Warm Cream / Midnight Geek Black / Retro Cream Gray (toggle key labels, key bubbles, and mouse click bubbles)
@@ -54,7 +55,11 @@
 | :---: | :---: |
 | <img src="assets/preview_gingerTabby.png" width="420" alt="Ginger Tabby preview"/> | <img src="assets/preview_britishBlue.png" width="420" alt="British Shorthair Blue preview"/> |
 
-The 6-state previews are natively rendered by the app: Idle, Top-Left Look, Bottom-Right Look, Hunting, Keyboard/Mouse + 3rd Paw, and Petting Closed Eyes.
+| Lulu the Capybara (second species) |
+| :---: |
+| <img src="assets/preview_lulu.png" width="640" alt="Lulu capybara preview"/> |
+
+Lulu's outlines are traced from MIT-licensed reference art (see `THIRD-PARTY-NOTICES.md`); no bitmap is loaded at runtime. The 6-state previews are natively rendered by the app: Idle, Top-Left Look, Bottom-Right Look, Hunting, Keyboard/Mouse + 3rd Paw, and Petting Closed Eyes.
 
 ---
 

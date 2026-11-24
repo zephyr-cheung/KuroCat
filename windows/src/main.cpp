@@ -26,6 +26,7 @@
 #include "InputEngine.hpp"
 #include "CatPhysics.hpp"
 #include "CatRenderer.hpp"
+#include "CapybaraRenderer.hpp"
 
 #ifndef WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY
 #define WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY 4
@@ -81,6 +82,8 @@ enum MenuCmd : UINT {
     CMD_COAT_CALICO,
     CMD_COAT_GINGER_TABBY,
     CMD_COAT_BRITISH_BLUE,
+    CMD_SPECIES_CAT,
+    CMD_SPECIES_CAPYBARA,
     CMD_KB_MILK,
     CMD_KB_HACKER,
     CMD_KB_RETRO,
@@ -911,6 +914,12 @@ void showContextMenu(AppState& app, POINT screenPt) {
     AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::BritishBlue ? MF_CHECKED : 0), CMD_COAT_BRITISH_BLUE, L"英短蓝猫");
     AppendMenuW(menu, MF_POPUP, (UINT_PTR)coatMenu, L"\u732B\u54AA\u76AE\u80A4");
 
+    // Pet species submenu (猫 / 水豚噜噜)
+    HMENU speciesMenu = CreatePopupMenu();
+    AppendMenuW(speciesMenu, MF_STRING | (app.settings.species == PetSpecies::Cat ? MF_CHECKED : 0), CMD_SPECIES_CAT, L"猫咪（8 款皮肤）");
+    AppendMenuW(speciesMenu, MF_STRING | (app.settings.species == PetSpecies::Capybara ? MF_CHECKED : 0), CMD_SPECIES_CAPYBARA, L"水豚噜噜（小橘子帽）");
+    AppendMenuW(menu, MF_POPUP, (UINT_PTR)speciesMenu, L"宠物种类");
+
     // Keyboard Theme submenu
     HMENU kbMenu = CreatePopupMenu();
     AppendMenuW(kbMenu, MF_STRING | (app.settings.keyboardTheme == KeyboardTheme::ClassicMilk ? MF_CHECKED : 0), CMD_KB_MILK, L"\u7ECF\u5178\u5976\u767D\u6696\u9EC4 (\u539F\u7248)");
@@ -1028,6 +1037,14 @@ void showContextMenu(AppState& app, POINT screenPt) {
             app.settings.saveToRegistry();
             break;
         }
+        case CMD_SPECIES_CAT:
+            app.settings.species = PetSpecies::Cat;
+            app.settings.saveToRegistry();
+            break;
+        case CMD_SPECIES_CAPYBARA:
+            app.settings.species = PetSpecies::Capybara;
+            app.settings.saveToRegistry();
+            break;
         case CMD_EYE_SOFT_AMBER: app.settings.eyeTheme = EyeColorTheme::SoftAmber; app.settings.saveToRegistry(); break;
         case CMD_EYE_REFERENCE_HAZEL: app.settings.eyeTheme = EyeColorTheme::ReferenceHazel; app.settings.saveToRegistry(); break;
         case CMD_KB_MILK:   app.settings.keyboardTheme = KeyboardTheme::ClassicMilk; app.settings.saveToRegistry(); break;
@@ -1139,7 +1156,9 @@ void tickAndRender(AppState& app) {
                 (float)(cur.x - wr.left) / (float)w * CatPhysics::CanvasWidth,
                 (float)(cur.y - wr.top)  / (float)h * CatPhysics::CanvasHeight
             };
-            CatHitZone zone = CatRenderer::hitTest(cp, app.physics, app.settings.coatTheme);
+            CatHitZone zone = app.settings.species == PetSpecies::Capybara
+                ? CapybaraRenderer::hitTest(cp, app.physics)
+                : CatRenderer::hitTest(cp, app.physics, app.settings.coatTheme);
             if (zone == CatHitZone::Head) {
                 if (app.hasLastHover) {
                     float d = std::hypot(cp.x - app.lastHoverCanvas.x, cp.y - app.lastHoverCanvas.y);
@@ -1170,7 +1189,13 @@ void tickAndRender(AppState& app) {
     Gdiplus::Graphics g(&bmp);
     g.Clear(Gdiplus::Color(0, 0, 0, 0));
     g.ScaleTransform((float)w / CatPhysics::CanvasWidth, (float)h / CatPhysics::CanvasHeight);
-    CatRenderer::draw(g, app.physics, app.settings);
+    if (app.settings.species == PetSpecies::Capybara) {
+        CatRenderer::drawBackdrop(g, app.physics, app.settings);
+        CapybaraRenderer::draw(g, app.physics, app.settings);
+        CatRenderer::drawOverlay(g, app.physics, app.settings);
+    } else {
+        CatRenderer::draw(g, app.physics, app.settings);
+    }
 
     POINT ptDst = { wr.left, wr.top };
     SIZE szWnd = { w, h };

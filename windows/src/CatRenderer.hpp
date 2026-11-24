@@ -89,6 +89,16 @@ public:
         drawSparkles(g, physics, settings.eyeTheme);
     }
 
+    // --- Shared scene props, reused by other species renderers (e.g. CapybaraRenderer) ---
+    static void drawBackdrop(Gdiplus::Graphics& g, const CatPhysics& physics, const CatSettings& settings) {
+        drawMouse(g, physics, settings.keyboardTheme);
+        drawKeyboard(g, physics, settings.keyboardTheme, settings.eyeTheme, settings.showKeyLegends);
+    }
+    static void drawOverlay(Gdiplus::Graphics& g, const CatPhysics& physics, const CatSettings& settings) {
+        if (!physics.floatingKeycaps.empty()) drawFloatingKeycaps(g, physics);
+        drawSparkles(g, physics, settings.eyeTheme);
+    }
+
 private:
     static Gdiplus::Color catBlack(BYTE a = 255)      { return Gdiplus::Color(a, 22, 22, 24); }
     static Gdiplus::Color contourMint(BYTE a = 194)   { return Gdiplus::Color(a, 209, 235, 227); }
