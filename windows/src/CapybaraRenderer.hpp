@@ -32,7 +32,8 @@ public:
         g.SetPixelOffsetMode(PixelOffsetModeHighQuality);
         g.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
         const float cx = CatPhysics::SeatAnchor.x + p.bodyShiftX.value;
-        const float bodyY = 185.0f;
+        // Keep the traced torso tucked behind the lower muzzle; the source has no neck seam.
+        const float bodyY = 165.0f;
         const float breath = std::sin(p.time * 2.1f) * 1.0f;
         const Pt head{cx + p.bodyTilt.value * 8.0f + p.headYaw.value * 2.5f,
                       105.0f + p.headOffsetY.value + p.headPitch.value * 2.0f + breath};
@@ -107,6 +108,7 @@ private:
         g.TranslateTransform(cx - 95.0f, bodyY - 157.0f);
         g.RotateTransform(p.bodyTilt.value * RadToDeg);
         g.ScaleTransform(1.0f + (1.0f-p.bodySquash.value)*0.20f, p.bodySquash.value);
+
         gradientLayer(g, luluBodyYellowPolygons(), PointF(75,128), PointF(120,176), furLight(), fur());
         fillLayer(g, luluLegsPolygons(), fur());
         gradientLayer(g, luluShortsPolygons(), PointF(95,145), PointF(95,205), hat(), orangeDark());
