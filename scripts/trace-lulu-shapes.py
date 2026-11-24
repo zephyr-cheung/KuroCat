@@ -20,8 +20,8 @@ SCALE = 4  # trace at 4x for smoother curves, then divide the points back
 # Idle frame 0 of the 8x11 sprite sheet.
 FRAME_ROW, FRAME_COL = 0, 0
 
-HEAD_ORIGIN = (95.0, 75.0)     # cell-space head anchor
-BODY_ORIGIN = (95.0, 130.0)    # cell-space body anchor
+HEAD_ORIGIN = (95.0, 80.0)     # cell-space head anchor
+BODY_ORIGIN = (95.0, 157.0)    # cell-space body anchor
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "windows" / "src" / "LuluShapes.hpp"
@@ -95,17 +95,21 @@ def main():
         return [(x / SCALE, y / SCALE) for x, y in pts]
 
     # Head silhouette (crown cut just below the hat brim), muzzle, hat.
-    head = poly(yarn, 30, 133, eps=2.2)
+    # Trace the full outer silhouette, including the orange muzzle edge, from
+    # alpha. The muzzle is drawn again as its own layer; this underlay prevents
+    # small gaps when head and muzzle are rotated independently.
+    head = poly(solid, 36, 130, eps=2.2)
     muzzle = poly(orange, 45, 133, eps=2.0)
     hat = poly(orange, 0, 33, eps=2.0, min_area=200)
-    leaf = poly(green, 0, 20, eps=1.6, min_area=8)
+    # The tiny leaf is easier and cleaner to draw procedurally in the renderer.
+    leaf = []
 
     # Torso: erase the side arms so procedural arms can animate on the keyboard.
-    torso_mask = region(yellow, 132, 170)
+    torso_mask = region(yellow, 120, 178)
     arm_free = torso_mask.copy()
     arm_free[:, :54 * SCALE] = 0
     arm_free[:, 138 * SCALE:] = 0
-    torso = poly(arm_free, 132, 170, eps=2.2, min_area=300)
+    torso = poly(arm_free, 120, 178, eps=2.2, min_area=300)
     shorts = poly(orange, 150, 208, eps=2.2, min_area=300)
     leg_l = poly(yellow, 178, 208, eps=0.7, min_area=40)
     # Split the leg contour by x if both legs merged into one blob.

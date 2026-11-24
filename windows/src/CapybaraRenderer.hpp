@@ -37,9 +37,9 @@ public:
 
         float breath = std::sin(physics.time * 2.1f) * 1.6f;
         float cx = CatPhysics::SeatAnchor.x + physics.bodyShiftX.value;
-        float bodyY = 217.0f;
+        float bodyY = 185.0f;
         Pt head = { cx + physics.bodyTilt.value * 26.0f + physics.headYaw.value * 6.0f,
-                    107.0f + physics.headOffsetY.value + physics.headPitch.value * 4.0f + breath * 1.2f };
+                    112.0f + physics.headOffsetY.value + physics.headPitch.value * 4.0f + breath * 1.2f };
 
         drawBody(g, cx, bodyY, physics);
         drawHead(g, head, physics);
@@ -129,41 +129,41 @@ private:
         // Chubby plush body, nearly as wide as the head.
         GraphicsPath body;
         body.StartFigure();
-        body.AddBezier(PointF(-48, -74), PointF(-58, -60), PointF(-58, -24), PointF(-57, -6));
-        body.AddBezier(PointF(-57, 8), PointF(-56, 18), PointF(-50, 22), PointF(-42, 23));
+        body.AddBezier(PointF(-48, -56), PointF(-58, -44), PointF(-58, -14), PointF(-57, 2));
+        body.AddBezier(PointF(-57, 10), PointF(-56, 18), PointF(-50, 22), PointF(-42, 23));
         body.AddLine(PointF(-42, 23), PointF(42, 23));
         body.AddBezier(PointF(50, 22), PointF(56, 18), PointF(57, 8), PointF(57, -6));
-        body.AddBezier(PointF(58, -24), PointF(58, -60), PointF(48, -74), PointF(0, -78));
-        body.AddBezier(PointF(-20, -76), PointF(-40, -76), PointF(-48, -74), PointF(-48, -74));
+        body.AddBezier(PointF(58, -14), PointF(58, -44), PointF(48, -56), PointF(0, -60));
+        body.AddBezier(PointF(-20, -58), PointF(-40, -58), PointF(-48, -56), PointF(-48, -56));
         body.CloseFigure();
 
-        LinearGradientBrush bg(PointF(-36, -78), PointF(34, 24), furLight(), fur());
+        LinearGradientBrush bg(PointF(-36, -60), PointF(34, 24), furLight(), fur());
         g.FillPath(&bg, &body);
         {
             GraphicsState cs = g.Save();
             g.SetClip(&body, CombineModeIntersect);
-            fillEllipse(g, Color(44, 255, 242, 168), -22.0f, -40.0f, 44.0f, 46.0f);
+            fillEllipse(g, Color(44, 255, 242, 168), -22.0f, -24.0f, 44.0f, 34.0f);
             g.Restore(cs);
         }
 
         // Short legs + soft feet.
         GraphicsPath legL;
-        addRoundedRect(legL, -36.0f, 14.0f, 22.0f, 20.0f, 10.0f);
+        addRoundedRect(legL, -36.0f, 12.0f, 22.0f, 16.0f, 8.0f);
         GraphicsPath legR;
-        addRoundedRect(legR, 14.0f, 14.0f, 22.0f, 20.0f, 10.0f);
+        addRoundedRect(legR, 14.0f, 12.0f, 22.0f, 16.0f, 8.0f);
         SolidBrush legBrush(fur());
         g.FillPath(&legBrush, &legL);
         g.FillPath(&legBrush, &legR);
 
         // Orange shorts.
         GraphicsPath sh;
-        addRoundedRect(sh, -57.0f, -18.0f, 114.0f, 35.0f, 13.0f);
-        LinearGradientBrush shb(PointF(0, -18), PointF(0, 17), shorts(), shortsDark());
+        addRoundedRect(sh, -57.0f, -4.0f, 114.0f, 28.0f, 11.0f);
+        LinearGradientBrush shb(PointF(0, -4), PointF(0, 24), shorts(), shortsDark());
         g.FillPath(&shb, &sh);
         Pen waist(Color(115, 255, 224, 150), 1.8f);
-        g.DrawLine(&waist, PointF(-50.0f, -12.0f), PointF(50.0f, -12.0f));
+        g.DrawLine(&waist, PointF(-50.0f, 1.0f), PointF(50.0f, 1.0f));
         Pen seam(Color(80, 150, 70, 8), 1.4f);
-        g.DrawLine(&seam, PointF(0.0f, -2.0f), PointF(0.0f, 15.0f));
+        g.DrawLine(&seam, PointF(0.0f, 6.0f), PointF(0.0f, 23.0f));
 
         g.Restore(st);
     }
@@ -322,7 +322,7 @@ private:
 
         for (int side = -1; side <= 1; side += 2) {
             bool busy = side < 0 ? leftBusy : rightBusy;
-            Pt shoulder = { cx + side * 43.0f, bodyY - 26.0f };
+            Pt shoulder = { cx + side * 43.0f, bodyY - 4.0f };
 
             if (!busy) {
                 Pt end = { shoulder.x + side * 2.0f, shoulder.y + 26.0f };
@@ -350,7 +350,7 @@ private:
 
     static void drawHindFoot(Gdiplus::Graphics& g, float cx, float bodyY, const CatPhysics& physics) {
         using namespace Gdiplus;
-        Pt hip = { cx + 34.0f, bodyY + 40.0f };
+        Pt hip = { cx + 34.0f, bodyY + 28.0f };
         Pt t = physics.hindFoot.point();
         drawCapsule(g, furShade(), hip, t, 15.0f);
         drawCapsule(g, fur(), hip, t, 13.0f);
