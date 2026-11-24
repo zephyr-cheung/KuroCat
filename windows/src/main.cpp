@@ -77,6 +77,10 @@ enum MenuCmd : UINT {
     CMD_COAT_SIAMESE,
     CMD_COAT_SHORTHAIR,
     CMD_COAT_ORANGE_WHITE,
+    CMD_COAT_TUXEDO,
+    CMD_COAT_CALICO,
+    CMD_COAT_GINGER_TABBY,
+    CMD_COAT_BRITISH_BLUE,
     CMD_KB_MILK,
     CMD_KB_HACKER,
     CMD_KB_RETRO,
@@ -900,6 +904,11 @@ void showContextMenu(AppState& app, POINT screenPt) {
     AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::Siamese ? MF_CHECKED : 0), CMD_COAT_SIAMESE, L"\u6316\u7164\u66B9\u7F57\u732B");
     AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::Shorthair ? MF_CHECKED : 0), CMD_COAT_SHORTHAIR, L"美短（银虎斑加白）");
     AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::OrangeWhite ? MF_CHECKED : 0), CMD_COAT_ORANGE_WHITE, L"橘白猫");
+    AppendMenuW(coatMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::Tuxedo ? MF_CHECKED : 0), CMD_COAT_TUXEDO, L"奶牛猫（燕尾服）");
+    AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::Calico ? MF_CHECKED : 0), CMD_COAT_CALICO, L"三花猫");
+    AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::GingerTabby ? MF_CHECKED : 0), CMD_COAT_GINGER_TABBY, L"橘猫虎斑");
+    AppendMenuW(coatMenu, MF_STRING | (app.settings.coatTheme == CatCoatTheme::BritishBlue ? MF_CHECKED : 0), CMD_COAT_BRITISH_BLUE, L"英短蓝猫");
     AppendMenuW(menu, MF_POPUP, (UINT_PTR)coatMenu, L"\u732B\u54AA\u76AE\u80A4");
 
     // Keyboard Theme submenu
@@ -1003,10 +1012,22 @@ void showContextMenu(AppState& app, POINT screenPt) {
             break;
         case CMD_COAT_SHORTHAIR:
         case CMD_COAT_ORANGE_WHITE:
-            app.settings.coatTheme = cmd == CMD_COAT_SHORTHAIR ? CatCoatTheme::Shorthair : CatCoatTheme::OrangeWhite;
-            app.settings.eyeTheme = EyeColorTheme::SoftAmber;
+        case CMD_COAT_TUXEDO:
+        case CMD_COAT_CALICO:
+        case CMD_COAT_GINGER_TABBY:
+        case CMD_COAT_BRITISH_BLUE: {
+            switch (cmd) {
+                case CMD_COAT_SHORTHAIR:   app.settings.coatTheme = CatCoatTheme::Shorthair; break;
+                case CMD_COAT_ORANGE_WHITE:app.settings.coatTheme = CatCoatTheme::OrangeWhite; break;
+                case CMD_COAT_TUXEDO:      app.settings.coatTheme = CatCoatTheme::Tuxedo; break;
+                case CMD_COAT_CALICO:      app.settings.coatTheme = CatCoatTheme::Calico; break;
+                case CMD_COAT_GINGER_TABBY:app.settings.coatTheme = CatCoatTheme::GingerTabby; break;
+                default:                   app.settings.coatTheme = CatCoatTheme::BritishBlue; break;
+            }
+            app.settings.eyeTheme = (cmd == CMD_COAT_TUXEDO) ? EyeColorTheme::NeonChartreuse : EyeColorTheme::SoftAmber;
             app.settings.saveToRegistry();
             break;
+        }
         case CMD_EYE_SOFT_AMBER: app.settings.eyeTheme = EyeColorTheme::SoftAmber; app.settings.saveToRegistry(); break;
         case CMD_EYE_REFERENCE_HAZEL: app.settings.eyeTheme = EyeColorTheme::ReferenceHazel; app.settings.saveToRegistry(); break;
         case CMD_KB_MILK:   app.settings.keyboardTheme = KeyboardTheme::ClassicMilk; app.settings.saveToRegistry(); break;

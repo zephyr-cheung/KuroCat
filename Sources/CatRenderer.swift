@@ -10,30 +10,81 @@ enum CatHitZone {
 }
 
 enum CatRenderer {
-    private static func patterned(_ coat: CatCoatTheme) -> Bool { coat == .shorthair || coat == .orangeWhite }
+    private static func patterned(_ coat: CatCoatTheme) -> Bool { coat == .shorthair || coat == .orangeWhite || coat == .tuxedo || coat == .calico || coat == .gingerTabby }
+    private static func hasTailRings(_ coat: CatCoatTheme) -> Bool { coat == .shorthair || coat == .orangeWhite || coat == .gingerTabby }
     private static func rgb(_ hex: Int, _ alpha: CGFloat = 1) -> NSColor {
         NSColor(calibratedRed: CGFloat((hex >> 16) & 255)/255,
                 green: CGFloat((hex >> 8) & 255)/255, blue: CGFloat(hex & 255)/255, alpha: alpha)
     }
     private static func bodyColor(_ coat: CatCoatTheme) -> NSColor {
-        coat == .shorthair ? rgb(0xC2C5C1) : (coat == .orangeWhite ? rgb(0xF2EEE4) : catBlack)
+        switch coat {
+        case .shorthair:   return rgb(0xC2C5C1)
+        case .orangeWhite: return rgb(0xF2EEE4)
+        case .tuxedo:      return rgb(0x1A1A1C)
+        case .calico:      return rgb(0xF7F3EC)
+        case .gingerTabby: return rgb(0xE2A45E)
+        case .britishBlue: return rgb(0x8A97A5)
+        default:           return catBlack
+        }
     }
     private static func limbColor(_ coat: CatCoatTheme) -> NSColor {
-        coat == .orangeWhite ? rgb(0xD8AA73) : bodyColor(coat)
+        switch coat {
+        case .orangeWhite: return rgb(0xD8AA73)
+        case .britishBlue: return rgb(0x8492A0)
+        default:           return bodyColor(coat)
+        }
     }
     private static func pawColor(_ coat: CatCoatTheme) -> NSColor {
-        patterned(coat) ? rgb(0xF2EEE4) : (coat == .siamese ? siamesePoint : catBlack)
+        switch coat {
+        case .shorthair, .orangeWhite, .calico: return rgb(0xF2EEE4)
+        case .tuxedo:      return rgb(0xF4F1EA)
+        case .gingerTabby: return rgb(0xF7E8D2)
+        case .britishBlue: return rgb(0x99A6B3)
+        case .siamese:     return siamesePoint
+        default:           return catBlack
+        }
     }
     private static func earTailColor(_ coat: CatCoatTheme) -> NSColor {
-        coat == .siamese ? siamesePoint : limbColor(coat)
+        switch coat {
+        case .siamese:     return siamesePoint
+        case .calico:      return rgb(0xD99A5B)
+        case .britishBlue: return rgb(0x7D8A98)
+        default:           return limbColor(coat)
+        }
+    }
+    private static func earColor(_ coat: CatCoatTheme, isLeft: Bool) -> NSColor {
+        if coat == .calico { return isLeft ? rgb(0xD99A5B) : rgb(0x413A3A) }
+        return earTailColor(coat)
     }
     private static func creaseColor(_ coat: CatCoatTheme) -> NSColor {
-        patterned(coat) ? rgb(0x8B8171, 0.60) : contourMint
+        switch coat {
+        case .tuxedo:      return rgb(0xC9CDD3, 0.42)
+        case .britishBlue: return rgb(0x53606C, 0.55)
+        case .gingerTabby: return rgb(0x9C6432, 0.58)
+        default:
+            return patterned(coat) ? rgb(0x8B8171, 0.60) : contourMint
+        }
+    }
+    private static func whiskerColor(_ coat: CatCoatTheme) -> NSColor {
+        switch coat {
+        case .siamese:     return siameseWhisker
+        case .tuxedo:      return rgb(0xD9DCE1, 0.67)
+        case .britishBlue: return rgb(0xE6ECF2, 0.59)
+        default:
+            return patterned(coat) ? rgb(0x8D8170, 0.68) : whiskerDefault
+        }
+    }
+    private static func tailRingColor(_ coat: CatCoatTheme) -> NSColor {
+        switch coat {
+        case .shorthair:   return rgb(0x55595A, 0.50)
+        case .gingerTabby: return rgb(0xA9723C, 0.59)
+        default:           return rgb(0xA57543, 0.50)
+        }
     }
 
     static let catBlack = NSColor(calibratedRed: 0.085, green: 0.085, blue: 0.095, alpha: 1.0)
     static let contourMint = NSColor(calibratedRed: 0.82, green: 0.92, blue: 0.89, alpha: 0.76)
-    static let whiskerColor = NSColor(calibratedRed: 0.88, green: 0.90, blue: 0.92, alpha: 0.72)
+    static let whiskerDefault = NSColor(calibratedRed: 0.88, green: 0.90, blue: 0.92, alpha: 0.72)
 
     // Siamese Seal-Point Palette (小豆泥风暖奶白躯干 + 柔和丝绒焦糖可可重点色)
     static let siameseCream    = NSColor(calibratedRed: 0.965, green: 0.937, blue: 0.894, alpha: 1.0) // #F6EFE4
@@ -418,11 +469,11 @@ enum CatRenderer {
         ctx.addCurve(to: tip, control1: c1, control2: c2)
         let tailLine = ctx.path
         ctx.strokePath()
-        if patterned(coat), let line = tailLine {
+        if hasTailRings(coat), let line = tailLine {
             ctx.saveGState()
             ctx.addPath(line.copy(strokingWithWidth: 11, lineCap: .round, lineJoin: .round, miterLimit: 10))
             ctx.clip()
-            ctx.setStrokeColor(rgb(coat == .shorthair ? 0x55595A : 0xA57543, 0.50).cgColor)
+            ctx.setStrokeColor(tailRingColor(coat).cgColor)
             ctx.setLineWidth(3.5); ctx.setLineCap(.butt)
             for t: CGFloat in [0.50, 0.78] {
                 let u = 1-t
@@ -518,7 +569,7 @@ enum CatRenderer {
             ctx.setFillColor(bodyColor(coat).cgColor)
             ctx.addPath(path)
             ctx.fillPath()
-            if patterned(coat) {
+            if !CoatPatterns.marks(for: coat).isEmpty {
                 ctx.saveGState(); ctx.addPath(path); ctx.clip()
                 drawCoatMarks(in: ctx, seatX: seatX, seatY: seatY, head: headCenter, physics: physics, coat: coat)
                 ctx.restoreGState()
@@ -641,7 +692,7 @@ enum CatRenderer {
     private static func coatMarkPoint(_ p: CGPoint, headSurface: Bool, skull: Bool, coat: CatCoatTheme, seatX: CGFloat, seatY: CGFloat,
                                       head: CGPoint, physics: CatPhysics) -> CGPoint {
         if headSurface {
-            let depth: CGFloat = coat == .orangeWhite
+            let depth: CGFloat = (coat != .shorthair)
                 ? 29.6 * sqrt(max(0, 1 - pow(p.x / 46, 2) - pow(p.y / 40, 2))) : 27.5
             let projected = skull ? p : projectHead3D(x: p.x, y: p.y, z: depth,
                                           yawRad: physics.headYaw.value * 0.50,
@@ -848,7 +899,7 @@ enum CatRenderer {
         ear.closeSubpath()
 
         ctx.saveGState()
-        ctx.setFillColor(earTailColor(coat).cgColor)
+        ctx.setFillColor(earColor(coat, isLeft: isLeft).cgColor)
         ctx.addPath(ear)
         ctx.fillPath()
 
@@ -1034,7 +1085,7 @@ enum CatRenderer {
     ) {
         let wiggle = sin(physics.time * 4.5) * (max(physics.petHeadIntensity, physics.petBodyIntensity) * 1.2)
         ctx.saveGState()
-        let wColor = (coat == .siamese) ? siameseWhisker : (patterned(coat) ? rgb(0x8D8170) : whiskerColor).withAlphaComponent(0.68)
+        let wColor = whiskerColor(coat)
         ctx.setStrokeColor(wColor.cgColor)
         ctx.setLineWidth(1.0)
         ctx.setLineCap(.round)

@@ -758,7 +758,7 @@ static void showPopupMenu(LinuxApp& app, GdkEventButton* evt) {
                 auto coat = (CatCoatTheme)(intptr_t)p;
                 g_app->settings.coatTheme = coat;
                 g_app->settings.eyeTheme = coat == CatCoatTheme::Siamese ? EyeColorTheme::SiameseBlue :
-                    (coat == CatCoatTheme::ClassicBlack ? EyeColorTheme::NeonChartreuse : EyeColorTheme::SoftAmber);
+                    ((coat == CatCoatTheme::ClassicBlack || coat == CatCoatTheme::Tuxedo) ? EyeColorTheme::NeonChartreuse : EyeColorTheme::SoftAmber);
                 g_app->settings.save();
             }), (gpointer)(intptr_t)c);
             gtk_menu_shell_append(GTK_MENU_SHELL(sub), it);
@@ -767,6 +767,10 @@ static void showPopupMenu(LinuxApp& app, GdkEventButton* evt) {
         addCoat("挖煤暹罗猫", CatCoatTheme::Siamese);
         addCoat("美短（银虎斑加白）", CatCoatTheme::Shorthair);
         addCoat("橘白猫", CatCoatTheme::OrangeWhite);
+        addCoat("奶牛猫（燕尾服）", CatCoatTheme::Tuxedo);
+        addCoat("三花猫", CatCoatTheme::Calico);
+        addCoat("橘猫虎斑", CatCoatTheme::GingerTabby);
+        addCoat("英短蓝猫", CatCoatTheme::BritishBlue);
         GtkWidget* parent = gtk_menu_item_new_with_label("猫咪皮肤 🐱");
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(parent), sub);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), parent);

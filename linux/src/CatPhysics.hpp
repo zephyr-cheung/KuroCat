@@ -15,7 +15,11 @@ enum class CatCoatTheme : int {
     ClassicBlack = 0,
     Siamese = 1,
     Shorthair = 2,
-    OrangeWhite = 3
+    OrangeWhite = 3,
+    Tuxedo = 4,
+    Calico = 5,
+    GingerTabby = 6,
+    BritishBlue = 7
 };
 
 enum class KeyboardTheme : int {
@@ -81,7 +85,7 @@ struct CatSettings {
                 else if (k == "alwaysOnTop") alwaysOnTop = (std::stoi(v) != 0);
                 else if (k == "highFrameRate") highFrameRate = (std::stoi(v) != 0);
                 else if (k == "scale") scale = std::clamp(std::stof(v), 0.5f, 2.0f);
-                else if (k == "coatTheme") coatTheme = (CatCoatTheme)std::clamp(std::stoi(v), 0, 3);
+                else if (k == "coatTheme") coatTheme = (CatCoatTheme)std::clamp(std::stoi(v), 0, 7);
                 else if (k == "keyboardTheme") keyboardTheme = (KeyboardTheme)std::clamp(std::stoi(v), 0, 2);
                 else if (k == "eyeTheme") eyeTheme = (EyeColorTheme)std::clamp(std::stoi(v), 0, 5);
                 else if (k == "posX") posX = std::stoi(v);

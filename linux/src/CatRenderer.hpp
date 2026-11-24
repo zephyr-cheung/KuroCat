@@ -88,16 +88,93 @@ private:
         cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a * alphaMul);
     }
 
-    static bool patterned(CatCoatTheme c) { return c == CatCoatTheme::Shorthair || c == CatCoatTheme::OrangeWhite; }
+    static bool patterned(CatCoatTheme c) { return c == CatCoatTheme::Shorthair || c == CatCoatTheme::OrangeWhite || c == CatCoatTheme::Tuxedo || c == CatCoatTheme::Calico || c == CatCoatTheme::GingerTabby; }
+    static bool hasTailRings(CatCoatTheme c) { return c == CatCoatTheme::Shorthair || c == CatCoatTheme::OrangeWhite || c == CatCoatTheme::GingerTabby; }
     static RGBA rgb(unsigned int hex, double a=1.0) { return {((hex>>16)&255)/255.0,((hex>>8)&255)/255.0,(hex&255)/255.0,a}; }
-    static RGBA bodyColor(CatCoatTheme c) { return c == CatCoatTheme::Shorthair ? rgb(0xC2C5C1) : (c == CatCoatTheme::OrangeWhite ? rgb(0xF2EEE4) : catBlack); }
-    static RGBA limbColor(CatCoatTheme c) { return c == CatCoatTheme::OrangeWhite ? rgb(0xD8AA73) : bodyColor(c); }
-    static RGBA pawColor(CatCoatTheme c) { return patterned(c) ? rgb(0xF2EEE4) : (c == CatCoatTheme::Siamese ? siamesePoint : catBlack); }
-    static RGBA earTailColor(CatCoatTheme c) { return c == CatCoatTheme::Siamese ? siamesePoint : limbColor(c); }
-    static RGBA creaseColor(CatCoatTheme c) { return patterned(c) ? rgb(0x8B8171,0.60) : contourMint; }
+    static RGBA bodyColor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::Shorthair:  return rgb(0xC2C5C1);
+            case CatCoatTheme::OrangeWhite:return rgb(0xF2EEE4);
+            case CatCoatTheme::Tuxedo:     return rgb(0x1A1A1C);
+            case CatCoatTheme::Calico:     return rgb(0xF7F3EC);
+            case CatCoatTheme::GingerTabby:return rgb(0xE2A45E);
+            case CatCoatTheme::BritishBlue:return rgb(0x8A97A5);
+            default: return catBlack;
+        }
+    }
+    static RGBA limbColor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::OrangeWhite:return rgb(0xD8AA73);
+            case CatCoatTheme::BritishBlue:return rgb(0x8492A0);
+            default: return bodyColor(c);
+        }
+    }
+    static RGBA pawColor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::Shorthair:
+            case CatCoatTheme::OrangeWhite:
+            case CatCoatTheme::Calico:     return rgb(0xF2EEE4);
+            case CatCoatTheme::Tuxedo:     return rgb(0xF4F1EA);
+            case CatCoatTheme::GingerTabby:return rgb(0xF7E8D2);
+            case CatCoatTheme::BritishBlue:return rgb(0x99A6B3);
+            case CatCoatTheme::Siamese:    return siamesePoint;
+            default: return catBlack;
+        }
+    }
+    static RGBA earTailColor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::Siamese:    return siamesePoint;
+            case CatCoatTheme::Calico:     return rgb(0xD99A5B);
+            case CatCoatTheme::BritishBlue:return rgb(0x7D8A98);
+            default: return limbColor(c);
+        }
+    }
+    static RGBA earColor(CatCoatTheme c, bool isLeft) {
+        if (c == CatCoatTheme::Calico) return isLeft ? rgb(0xD99A5B) : rgb(0x413A3A);
+        return earTailColor(c);
+    }
+    static RGBA creaseColor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::Tuxedo:     return rgb(0xC9CDD3,0.42);
+            case CatCoatTheme::BritishBlue:return rgb(0x53606C,0.55);
+            case CatCoatTheme::GingerTabby:return rgb(0x9C6432,0.58);
+            default:
+                if (patterned(c)) return rgb(0x8B8171,0.60);
+                return contourMint;
+        }
+    }
+    static RGBA whiskerColor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::Siamese:    return siameseWhisk;
+            case CatCoatTheme::Tuxedo:     return rgb(0xD9DCE1,0.67);
+            case CatCoatTheme::BritishBlue:return rgb(0xE6ECF2,0.59);
+            default:
+                if (patterned(c)) return rgb(0x8D8170,0.68);
+                return whiskerWhite;
+        }
+    }
+    static RGBA tailRingColor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::Shorthair:  return rgb(0x55595A,0.50);
+            case CatCoatTheme::GingerTabby:return rgb(0xA9723C,0.59);
+            default: return rgb(0xA57543,0.50);
+        }
+    }
+    static const std::vector<CoatMark>* marksFor(CatCoatTheme c) {
+        switch (c) {
+            case CatCoatTheme::Shorthair:  return &shorthairMarks();
+            case CatCoatTheme::OrangeWhite:return &orangeWhiteMarks();
+            case CatCoatTheme::Tuxedo:     return &tuxedoMarks();
+            case CatCoatTheme::Calico:     return &calicoMarks();
+            case CatCoatTheme::GingerTabby:return &gingerTabbyMarks();
+            case CatCoatTheme::BritishBlue:return &britishBlueMarks();
+            default: return nullptr;
+        }
+    }
     static Pt coatMarkPoint(CoatPoint p, bool headSurface, bool skull, CatCoatTheme coat, float seatX, float seatY, Pt head, const CatPhysics& physics) {
         if (headSurface) {
-            float depth=coat==CatCoatTheme::OrangeWhite ? 29.6f*std::sqrt(std::max(0.0f,1-p.x*p.x/(46*46)-p.y*p.y/(40*40))) : 27.5f;
+            bool wrapped = coat != CatCoatTheme::Shorthair;
+            float depth = wrapped ? 29.6f*std::sqrt(std::max(0.0f,1-p.x*p.x/(46*46)-p.y*p.y/(40*40))) : 27.5f;
             Pt q=skull ? Pt{p.x,p.y} : projectHead3D(p.x,p.y,depth,physics.headYaw.value*0.50f,physics.headPitch.value*0.36f);
             float c=std::cos(physics.headTilt.value),s=std::sin(physics.headTilt.value);
             return {head.x+q.x*c-q.y*s,head.y+q.x*s+q.y*c};
@@ -107,8 +184,9 @@ private:
         return {seatX+p.x*sx*c-p.y*sy*s,seatY+p.x*sx*s+p.y*sy*c};
     }
     static void drawCoatMarks(cairo_t* cr,float seatX,float seatY,Pt head,const CatPhysics& physics,CatCoatTheme coat) {
-        const auto& marks=coat==CatCoatTheme::Shorthair ? shorthairMarks() : orangeWhiteMarks();
-        for (const auto& mark: marks) {
+        const auto* marks=marksFor(coat);
+        if (!marks) return;
+        for (const auto& mark: *marks) {
             cairo_new_path(cr);
             bool first=true;
             for (const auto& point: mark.points) {
@@ -413,7 +491,7 @@ private:
         float huntDrop = hunt * 14.0f;
 
         cairo_save(cr);
-        if (patterned(coat)) cairo_push_group(cr);
+        if (hasTailRings(coat)) cairo_push_group(cr);
         setCol(cr, earTailColor(coat));
         cairo_set_line_width(cr, coat == CatCoatTheme::Siamese ? 9.5 : 11.0);
         cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
@@ -424,9 +502,9 @@ private:
             seatX + 66.0 + wag2 * 0.4, seatY - 26.0 + wag1 * 0.7 + huntDrop,
             seatX + 91.0 + wag2 * 0.5, seatY - 30.0 + wag1 * 0.85 + huntDrop);
         cairo_stroke(cr);
-        if (patterned(coat)) {
+        if (hasTailRings(coat)) {
             cairo_set_operator(cr,CAIRO_OPERATOR_ATOP);
-            setCol(cr,rgb(coat==CatCoatTheme::Shorthair ? 0x55595A : 0xA57543,0.50));
+            setCol(cr,tailRingColor(coat));
             cairo_set_line_width(cr,3.5);cairo_set_line_cap(cr,CAIRO_LINE_CAP_BUTT);
             double x0=seatX+34,y0=seatY-6;
             double x1=seatX+64,y1=seatY+2+wag1*0.35+huntDrop*0.4;
@@ -484,7 +562,7 @@ private:
         quadCurveTo(cr, tipR.x, tipR.y, (outB.x + tipR.x) * 0.5 + sign * 2.5, (outB.y + tipR.y) * 0.5 - 2.0, outB.x, outB.y);
         cairo_close_path(cr);
 
-        setCol(cr, earTailColor(coat));
+        setCol(cr, earColor(coat, isLeft));
         cairo_fill(cr);
 
         if (isSiamese) {
@@ -573,7 +651,7 @@ private:
             buildPath();
             setCol(cr, bodyColor(coat));
             cairo_fill(cr);
-            if (patterned(coat)) {
+            if (marksFor(coat)) {
                 cairo_save(cr); buildPath(); cairo_clip(cr);
                 drawCoatMarks(cr,seatX,seatY,headCenter,physics,coat); cairo_restore(cr);
             }
@@ -648,8 +726,8 @@ private:
         double hindRX = isSiamese ? 7.75 : 8.5;
         double leftHindCY = isSiamese ? 9.5 : 8.5;
         double leftHindRY = isSiamese ? 6.0 : 5.5;
-        double rightHindCY = (coat == CatCoatTheme::ClassicBlack || isSiamese) ? 10.75 : 8.5;
-        double rightHindRY = (coat == CatCoatTheme::ClassicBlack || isSiamese) ? 6.25 : 5.5;
+        double rightHindCY = (coat == CatCoatTheme::ClassicBlack || coat == CatCoatTheme::Tuxedo || isSiamese) ? 10.75 : 8.5;
+        double rightHindRY = (coat == CatCoatTheme::ClassicBlack || coat == CatCoatTheme::Tuxedo || isSiamese) ? 6.25 : 5.5;
 
         setCol(cr, pawColor(coat));
         cairo_new_path(cr);
@@ -834,7 +912,7 @@ private:
 
     static void drawWhiskers3D(cairo_t* cr, float yawRad, float pitchRad, const CatPhysics& physics, CatCoatTheme coat) {
         float wiggle = std::sin(physics.time * 4.5f) * (std::max(physics.petHeadIntensity, physics.petBodyIntensity) * 1.2f);
-        setCol(cr, coat == CatCoatTheme::Siamese ? siameseWhisk : (patterned(coat) ? rgb(0x8D8170,0.68) : whiskerWhite));
+        setCol(cr, whiskerColor(coat));
         cairo_set_line_width(cr, 1.05);
         cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 

@@ -15,6 +15,10 @@ enum CatCoatTheme: String, CaseIterable {
     case siamese = "挖煤暹罗猫"
     case shorthair = "美短（银虎斑加白）"
     case orangeWhite = "橘白猫"
+    case tuxedo = "奶牛猫（燕尾服）"
+    case calico = "三花猫"
+    case gingerTabby = "橘猫虎斑"
+    case britishBlue = "英短蓝猫"
 }
 
 enum EyeColorTheme: String, CaseIterable {

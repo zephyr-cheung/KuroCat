@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>Ultra-lightweight native desktop pet · Hardware-level full-state capture for typing &amp; gaming · 2.5D spherical head tracking · Hunting boba eyes · 4 switchable skins</b><br/>
+  <b>Ultra-lightweight native desktop pet · Hardware-level full-state capture for typing &amp; gaming · 2.5D spherical head tracking · Hunting boba eyes · 8 switchable skins</b><br/>
   Native macOS (Swift + CoreGraphics + IOHIDManager) · Windows (C++17 + GDI+ + Raw Input) · Linux / UOS (C++17 + GTK3/Cairo + XInput2/evdev)
 </p>
 
@@ -31,12 +31,12 @@
   - **3-Key "Hind Paw Press"**: Hold 3 or more keys simultaneously and the cat lifts its hind paw to press the 3rd key!
   - **Head / Back Petting**: Gently stroke the cat's head with your cursor to trigger cozy closed eyes `— —` and shimmer particles; leave it idle and it falls asleep with floating `z`s.
   - **Smart Click-Through, Launch at Login & Auto Update Check**: Transparent areas pass clicks through automatically. Toggle **Full Click-Through (Gaming Anti-Misclick)** anytime, enable **Launch at Login** (Windows Registry / macOS LaunchAgent / Linux XDG Autostart), and get automatic update notifications in the menu bar / tray.
-- **🎨 4 Skins & Custom Color Combinations**
-  - **Cat Skins**: Classic Black Cat (neon yellow-green eyes) / Siamese Cat (warm oat cream + 2.5D caramel mask + chocolate socks + sapphire blue eyes) / American Shorthair (silver tabby & white) / Orange & White Cat (orange crown + white chest & mittens)
+- **🎨 8 Skins & Custom Color Combinations**
+  - **Cat Skins**: Classic Black Cat (neon yellow-green eyes) / Siamese Cat (warm oat cream + 2.5D caramel mask + chocolate socks + sapphire blue eyes) / American Shorthair (silver tabby & white) / Orange & White Cat (orange crown + white chest & mittens) / **Tuxedo Cat (ink black + white bib & mittens) / Calico Cat (creamy white + orange & charcoal patches + mismatched ears) / Ginger Tabby (warm ginger + deep-brown tabby stripes) / British Shorthair Blue (smoky blue-gray coat + copper eyes)**
   - **Keyboard Themes**: Classic Warm Cream / Midnight Geek Black / Retro Cream Gray (toggle key labels, key bubbles, and mouse click bubbles)
   - **Eye Colors & Scaling**: 6 eye colors, 5 size levels, plus daily keystroke counter and live KPM stats.
 
-### 6-State Preview of All 4 Skins
+### 6-State Preview of All 8 Skins
 
 | Classic Black Cat | Siamese Cat |
 | :---: | :---: |
@@ -45,6 +45,14 @@
 | American Shorthair | Orange & White Cat |
 | :---: | :---: |
 | <img src="assets/preview_shorthair.jpg" width="420" alt="American Shorthair preview"/> | <img src="assets/preview_orangeWhite.jpg" width="420" alt="Orange & White Cat preview"/> |
+
+| Tuxedo Cat | Calico Cat |
+| :---: | :---: |
+| <img src="assets/preview_tuxedo.png" width="420" alt="Tuxedo Cat preview"/> | <img src="assets/preview_calico.png" width="420" alt="Calico Cat preview"/> |
+
+| Ginger Tabby | British Shorthair Blue |
+| :---: | :---: |
+| <img src="assets/preview_gingerTabby.png" width="420" alt="Ginger Tabby preview"/> | <img src="assets/preview_britishBlue.png" width="420" alt="British Shorthair Blue preview"/> |
 
 The 6-state previews are natively rendered by the app: Idle, Top-Left Look, Bottom-Right Look, Hunting, Keyboard/Mouse + 3rd Paw, and Petting Closed Eyes.
 

@@ -476,6 +476,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             CatSettings.shared.eyeTheme = .siameseBlue
         case .shorthair, .orangeWhite:
             CatSettings.shared.eyeTheme = .softAmber
+        case .tuxedo:
+            CatSettings.shared.eyeTheme = .neonChartreuse
+        case .calico, .gingerTabby, .britishBlue:
+            CatSettings.shared.eyeTheme = .softAmber
         }
     }
 
